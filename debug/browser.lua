@@ -430,11 +430,11 @@ local function getvalue(expression)
    else
       local ok, ret = pcall(f)
       if not ok then
-	      io.write(ret)
+         io.write(ret)
       elseif ret == nil then
-	      io.write(code.." does not exist")
+         io.write(code.." does not exist")
       else
-	      return ret
+         return ret
       end
    end
 end
@@ -681,17 +681,14 @@ local function browser()
    end
 end
 
-function browse()
-   local c = coroutine.create(browser)
-   if coroutine.status(c) == "dead" then
-      -- recreate after crash, which should not happen
-      c = coroutine.create(browser)
+local browse = coroutine.wrap(
+   function ()
+      local ok, err = pcall(browser)
+      if not ok then
+         io.write(err, newline)
+      end
    end
-   local ok, err = coroutine.resume(c)
-   if not ok then
-      io.write(err, newline)
-   end
-end
+)
 
 -- add function browse to module "debug"
 debug["browse"] = browse
