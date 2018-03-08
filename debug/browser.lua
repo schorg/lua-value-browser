@@ -60,8 +60,8 @@ function pretty_printer(tab, width, write)
    local function fits(doc)
       local tdoc = type(doc)
       if tdoc == "string" then
-	      remaining_space = remaining_space - string.len(doc)
-	      return remaining_space > 0 
+         remaining_space = remaining_space - string.len(doc)
+         return remaining_space > 0 
       elseif tdoc == "table" then
          if doc.nest then
             remaining_space = remaining_space - string.len(space)
@@ -79,7 +79,7 @@ function pretty_printer(tab, width, write)
             return r
          end
       else
-	      error("this should not happen")
+         error("this should not happen")
       end
    end
    
@@ -115,13 +115,13 @@ function pretty_printer(tab, width, write)
             end
          end
       else
-	      error("this should not happen")
+         error("this should not happen")
       end
    end
    
    return function(doc)
-	          return layout(0, "flat", doc)
-	       end
+             return layout(0, "flat", doc)
+          end
 end
 
 --[[ examples 
@@ -215,7 +215,7 @@ local function complex2repr (value)
       elem.name = key2name(k)
       elem.value = v
       if istable(v) or isfunction(v) or isuserdata(v) then
-	 repr.links["."..elem.name] = elem
+         repr.links["."..elem.name] = elem
       end
       table.insert(repr, elem)
    end
@@ -309,10 +309,10 @@ local function complex2doc (repr)
          value2doc(v.name, v.value)
       }
       if fst then
-	      table.insert(delems, {wrap "", delem})
-	      fst = false
+         table.insert(delems, {wrap "", delem})
+         fst = false
       else
-	      table.insert(delems, {",", wrap " ", delem})
+         table.insert(delems, {",", wrap " ", delem})
       end
    end
 
@@ -366,10 +366,10 @@ end
 --]]--------------------------------------------------------------------
 
 Course = (function ()
-	         local adt = {}
-	         adt.__index = adt
-	         return adt
-	      end)()
+            local adt = {}
+            adt.__index = adt
+            return adt
+         end)()
 
 function course(equals)
    assert(type(equals) == "function")
@@ -404,7 +404,7 @@ function Course:add(elem)
    self.index = self.index + 1
    if not self.equals(elem, self.cache[self.index] or {}) then
       for i = self.index, #self.cache do
-	      table.remove(self.cache, i)
+         table.remove(self.cache, i)
       end
       table.insert(self.cache, self.index, elem)
    end
@@ -487,7 +487,7 @@ local function mktab(repr)
    local list = {}
    if type(repr) == "table" then
       for k, v in pairs(repr.links) do
-	      table.insert(list, k)
+         table.insert(list, k)
       end
       table.sort(list)
    end
@@ -497,10 +497,10 @@ local function mktab(repr)
    local function tab()
       i = i + 1
       if i > n then
-	      i = 0
-	      return nil
+         i = 0
+         return nil
       else
-	      return list[i]
+         return list[i]
       end
    end
    
@@ -622,8 +622,8 @@ local function complete(path, sublink)
    local link
    for lnk in linkiterator do
       if check(sublink, lnk) then
-	      link = lnk
-	      break
+         link = lnk
+         break
       end
    end
    if link then 
