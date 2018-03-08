@@ -3,9 +3,14 @@ Lua module for interactively printing and browsing Lua values from the standalon
 
 Should be compatible with Lua 5.1, 5.2 and 5.3 as well as with LuaJIT
 
-Usage
+Installs itself as single function ```browse``` in the ```debug``` module
+
+Keeps a history of visited values and therefore keeps references to values that otherwise would have been garbage collected.
+
+Usage:
 
 ```
+...
 > require "debug.browser"
 > debug.browse()
 Lua value browser 0.2
@@ -47,9 +52,11 @@ Type 'q' to quit, 'help' for help
       ipairs: function = .ipairs,
       jit: table = .jit,
       load: function = .load,
-      ...  
+      ... and so on
     }
-:
-
+: quit
+> debug.browse()
+: reload
+...
 ```
     
