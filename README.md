@@ -1,9 +1,9 @@
 # Lua value browser
-Lua module for interactively printing and browsing Lua values from the standalone interpreter
+Lua module for interactively printing and browsing Lua values from the standalone interpreter.
 
-Should be compatible with Lua 5.1, 5.2 and 5.3 as well as with LuaJIT
+Should be compatible with Lua 5.1, 5.2 and 5.3 as well as with LuaJIT.
 
-Installs itself as single function ```browse``` in the ```debug``` module
+Installs itself as a parameterless function ```browse``` in the ```debug``` module.
 
 Keeps a history of visited values and therefore keeps references to values that otherwise would have been garbage collected.
 
