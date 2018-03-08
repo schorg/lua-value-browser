@@ -419,7 +419,12 @@ local history = course(function (e1, e2) return e1.value == e2.value end)
 local function getvalue(expression)
    local code = expression
    local chunk = string.format("return %s", code)
-   local f, err = is51 and loadstring(chunk) or load(chunk)  -- depends on lua version
+   local f, err
+   if is51 then  -- depends on lua version
+      f, err = loadstring(chunk)
+   else
+      f, err = load(chunk) 
+   end
    if f == nil then
       io.write(err)
    else
