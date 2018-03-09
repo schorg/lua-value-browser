@@ -21,7 +21,14 @@ local tostring = tostring
 local rawset = rawset
 local print = print
 
-local _ENV = is51 and module(...) or {} -- nil for 5.1
+-- create a module where globals go to
+local module = {}
+if is51 then
+	setfenv(1, module) -- for 5.1
+else
+	_ENV = module -- for 5.2
+end
+
 
 version = "Lua value browser 0.2"
 copyright = "Copyright (C) 2010-2018, schorg@gmail.com"
@@ -161,11 +168,14 @@ pretty_printer(2, 9, io.write)(doc)
 --------
 -- model
 --------
+local function isstring(value)
+   return type(value) == "string"
+end
 
 local function issimple (value)
    local t = type(value)
    return  t == "nil" 
-      or t == "string"
+--      or t == "string"
       or t == "boolean" 
       or t == "number" 
       or t == "thread" 
@@ -184,28 +194,58 @@ local function isuserdata (value)
    return type(value) == "userdata"
 end
 
-local function key2name (key)
-   local t = type(key)
-   if t == "string" then
-      return key
-   elseif t == "boolean" or t == "number" then
-      return "["..tostring(key).."]"
-   else
-      return "<"..tostring(key)..">"
-   end
-end
-
-local function key2link(key)
-   local t = type(key)
-   if t == "string" then
-      return '.'..key
-   else
-      return 
-   end
+local function isNameOrMeta(s)
+   return string.match(s, "^<?[_,%a]+[_,%a,%d]*>?$") ~= nil
 end
 
 local function simple2repr (value)
    return tostring(value)
+end
+
+local function string2repr(s)
+   -- strings are represented by showing all bytes in quotation marks
+   local byte2Repr= {
+      [0] = "\\0",
+      [7] = "\\a", 
+      [8] = "\\b", 
+      [9] = "\\t", 
+      [10] = "\\n",
+      [11] = "\\v",
+      [12] = "\\f",
+      [13] = "\\r", 
+      [34] = "\\\"", 
+      [39] = "\\\'",
+      [92] = "\\\\" 
+   }
+   local res = ""
+   for i=1, #s do
+      local b = string.byte(s, i)
+      local r = byte2Repr[b]
+      if not r then
+         if b >= 32 and b <= 126 then
+            r = string.char(b)
+         else
+            r = "\\x"..string.format('%02X', b)
+         end
+      end
+      res = res .. r
+   end
+   return string.format('"%s"', res)
+end
+
+local function key2name (key)
+   local t = type(key)
+   if t == "string" then
+      if isNameOrMeta(key) then
+         return key
+      else
+         return "["..string2repr(key).."]"
+      end
+   elseif t == "boolean" or t == "number" then
+      return "["..simple2repr(key).."]"
+   else
+      return "<"..simple2repr(key)..">"
+   end
 end
 
 local function complex2repr (value)
@@ -249,16 +289,24 @@ end
 
 local function function2repr (value)
    local function upvalues(func)
-      local i = 0
+      local i = is51 and 0 or 1
       return function() 
-                i = i+1 
-                return debug.getupvalue(func, i) 
+                i = i+1
+                return debug.getupvalue(func, i)
              end
    end 
    local ft = debug.getinfo(value, "nS")
-   ft["<fenv>"] = is51 and getfenv(value) or debug.getupvalue(value, 1)
+   local fenv 
+   if is51 then
+      fenv = getfenv(value)
+   else
+      local _
+      _, fenv = debug.getupvalue(value, 1) -- Todo use the name for 5.2
+   end
+   ft["<fenv>"] = fenv
    local ups
-   for k, v in upvalues(value) do
+   for k, v in upvalues(value) do 
+      print("upvalue", k, v)
       ups = ups or {}
       ups[k] = v
    end
@@ -274,6 +322,8 @@ function visit (value)
       repr = userdata2repr(value)
    elseif issimple(value) then
       repr = simple2repr(value)
+   elseif isstring(value) then
+      repr = string2repr(value)
    else -- typ == "function"
       repr = function2repr(value)
    end
@@ -291,7 +341,9 @@ end
 
 local function value2doc(name, value)
    if issimple(value) then
-      return nest{wrap(), "= ", tostring(value)}
+      return nest{wrap(), "= ", simple2repr(value)}
+   elseif isstring(value) then
+      return nest{wrap(), "= ", string2repr(value)}
    else 
       return nest{wrap(), "= ", "."..name}
    end
@@ -376,7 +428,7 @@ function course(equals)
    local h = {
       index = 0,
       cache = {},
-      equals = equals
+      equals = equals,
    }
    return setmetatable(h, Course)
 end
@@ -403,18 +455,19 @@ end
 function Course:add(elem)
    self.index = self.index + 1
    if not self.equals(elem, self.cache[self.index] or {}) then
-      for i = self.index, #self.cache do
+      for i = #self.cache, self.index, -1 do
          table.remove(self.cache, i)
       end
       table.insert(self.cache, self.index, elem)
    end
 end
 
+
 ------------
 -- Controller 
 ------------
 
-local history = course(function (e1, e2) return e1.value == e2.value end)
+history = course(function (e1, e2) return e1.value == e2.value end)
 
 local function getvalue(expression)
    local code = expression
@@ -527,7 +580,8 @@ function back()
       io.write(show(prev.doc))
       mktab(prev.repr)
    else
-      name = history:current().name
+      local curr = history:current()
+      name = curr and curr.name or ""
       io.write("back history not available")
    end
    io.write(newline..prompt)   
@@ -542,7 +596,8 @@ function forward()
       io.write(show(next.doc))
       mktab(next.repr)
    else
-      name = history:current().name
+      local curr = history:current()
+      name = curr and curr.name or ""
       io.write("forward history not available")
    end
    io.write(newline..prompt)
@@ -651,44 +706,45 @@ local function isquoted(input)
    return string.sub(input, 1, 1) == '@'
 end
 
-local function browser()
-   local input
-   local path
-   io.write(version, newline, copyright, newline)
-   io.write("Type 'q' to quit, 'help' for help", newline)
-   io.write(prompt)
-   mktab({links={}})
-   while true do
-      input = input or ""
-      local ip = io.read("*l")
-      local command = commands[ip]
-      if command then
-         input, path = command(path)
-      else
-         input = input..ip
-         if islink(input) then
-            input, path = click(path, input)
-         elseif islinkprefix(input) then
-            input, path = complete(path, input) 
-         elseif isquoted(input) then
-            input, path = go(path, string.sub(input,2))
-         elseif input ~= "" then
-            input, path = go(path, input)
-         else
-            io.write(prompt)
-         end
-      end
-   end
-end
-
-local browse = coroutine.wrap(
+browse = coroutine.wrap (
    function ()
-      local ok, err = pcall(browser)
-      if not ok then
-         io.write(err, newline)
+      local input
+      local path
+      io.write(version, newline, copyright, newline)
+      io.write("Type 'q' to quit, 'help' for help", newline)
+      io.write(prompt)
+      mktab({links={}})
+      while true do
+         input = input or ""
+         local newip = io.read("*l")
+         local command = commands[newip]
+         if command then
+            input, path = command(path)
+         else
+            local curr = history:current()
+            if newip ~= "" then
+               input = newip
+               if curr then
+                  mktab(curr.repr)
+               end
+            end
+            if islink(input) then
+               input, path = click(path, input)
+            elseif islinkprefix(input) then
+               input, path = complete(path, input) 
+            elseif isquoted(input) then
+               input, path = go(path, string.sub(input,2))
+            elseif input ~= "" then
+               input, path = go(path, input)
+            else
+               io.write(prompt)
+            end
+         end
       end
    end
 )
 
 -- add function browse to module "debug"
 debug["browse"] = browse
+
+return module

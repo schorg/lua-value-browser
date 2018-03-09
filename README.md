@@ -3,9 +3,9 @@ Lua module for interactively printing and browsing Lua values from the standalon
 
 Should be compatible with Lua 5.1, 5.2 and 5.3 as well as with LuaJIT.
 
-Installs itself as a parameterless function ```browse``` in the ```debug``` module.
+Adds a parameterless function `browse` to the `debug` module on `require "debug.browser"`
 
-Keeps a history of visited values and therefore keeps references to values that otherwise would have been garbage collected.
+Keeps a linear history of visited values and therefore keeps references to values that otherwise might have been garbage collected.
 
 Usage:
 
