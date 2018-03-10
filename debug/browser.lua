@@ -24,9 +24,9 @@ local print = print
 -- create a module where globals go to
 local module = {}
 if is51 then
-	setfenv(1, module) -- for 5.1
+   setfenv(1, module) -- for 5.1
 else
-	_ENV = module -- for 5.2
+   _ENV = module -- for 5.2
 end
 
 
@@ -41,7 +41,7 @@ copyright = "Copyright (C) 2010-2018, schorg@gmail.com"
 
 
 local modes = "flat" or "break" -- just for comment purposes
-space = " "
+local space = " "
 
 function wrap(string)
    string = string or space
@@ -205,7 +205,6 @@ end
 local function string2repr(s)
    -- strings are represented by showing all bytes in quotation marks
    local byte2Repr= {
-      [0] = "\\0",
       [7] = "\\a", 
       [8] = "\\b", 
       [9] = "\\t", 
@@ -225,12 +224,12 @@ local function string2repr(s)
          if b >= 32 and b <= 126 then
             r = string.char(b)
          else
-            r = "\\x"..string.format('%02X', b)
+            r = string.format("\\%03d", b)
          end
       end
       res = res .. r
    end
-   return string.format('"%s"', res)
+   return string.format("\"%s\"", res)
 end
 
 local function key2name (key)
@@ -289,24 +288,18 @@ end
 
 local function function2repr (value)
    local function upvalues(func)
-      local i = is51 and 0 or 1
+      local i = 0
       return function() 
                 i = i+1
                 return debug.getupvalue(func, i)
              end
    end 
    local ft = debug.getinfo(value, "nS")
-   local fenv 
    if is51 then
-      fenv = getfenv(value)
-   else
-      local _
-      _, fenv = debug.getupvalue(value, 1) -- Todo use the name for 5.2
+      ft["<fenv>"] = getfenv(value)
    end
-   ft["<fenv>"] = fenv
    local ups
    for k, v in upvalues(value) do 
-      print("upvalue", k, v)
       ups = ups or {}
       ups[k] = v
    end
@@ -504,7 +497,6 @@ end
 
 local prompt = ": "
 local newline = "\n"
-local beep = "\07"
 
 
 local commands 
@@ -514,7 +506,7 @@ local h =
    Browse Lua runtime values, like a web page.
 
    Available Commands:
-   (h)elp  (f)orward (b)ack (r)eload .<link> (t)ab [@]<expr> (q)uit
+   [@]<expr> (h)elp  (f)orward (b)ack (r)eload .<link> (t)ab (q)uit
    
    <enter>     executes one of the above commands
    [@]<expr>   show data entity for Lua <expr>, @ quotes commands
@@ -699,7 +691,7 @@ end
 
 local function islinkprefix(input)
    local c = string.sub(input, 1, 1)
-   return c == "." or c == "[" or c == "#"
+   return c == "."
 end
 
 local function isquoted(input)
