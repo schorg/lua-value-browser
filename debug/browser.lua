@@ -232,6 +232,10 @@ local function string2repr(s)
    return string.format("\"%s\"", res)
 end
 
+local function ftu2repr(value)
+   return string.format("%s", tostring(value))
+end
+
 local function key2name (key)
    local t = type(key)
    if t == "string" then
@@ -242,8 +246,8 @@ local function key2name (key)
       end
    elseif t == "boolean" or t == "number" then
       return "["..simple2repr(key).."]"
-   else
-      return "<"..simple2repr(key)..">"
+   else -- function, table, userdata
+      return "["..ftu2repr(key).."]"
    end
 end
 
@@ -257,6 +261,14 @@ local function complex2repr (value)
          repr.links["."..elem.name] = elem
       end
       table.insert(repr, elem)
+      -- allow visualisaton of function, table or userdata key
+      if istable(k) or isfunction(k) or isuserdata(k) then
+         local metaelem ={}
+         metaelem.name = string.format("<[%s]>", ftu2repr(k))
+         metaelem.value = k
+         repr.links["."..metaelem.name] = metaelem
+         table.insert(repr, metaelem)
+      end
    end
    local mt = getmetatable(value)
    if mt then
