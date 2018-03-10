@@ -7,6 +7,12 @@ Adds a parameterless function `browse` to the `debug` module on `require "debug.
 
 Keeps a linear history of visited values and therefore keeps references to values that otherwise might have been garbage collected.
 
+Shows also meta values like
+* environments
+* upvalues
+* metatables
+* table keys which are tables, functions or userdata
+
 Usage:
 
 ```
@@ -20,10 +26,10 @@ Type 'q' to quit, 'help' for help
    Browse Lua runtime values, like a web page.
 
    Available Commands:
-   (h)elp  (f)orward (b)ack (r)eload .<link> (t)ab [@]<expr> (q)uit
+   [@]<expr> (h)elp  (f)orward (b)ack (r)eload .<link> (t)ab (q)uit
    
    <enter>     executes one of the above commands
-   [@]<expr>   show data entity for Lua <expr>, @ quotes commands
+   [@]<expr>   show data entity for Lua <expr>, @ escapes commands
    help (h)    show this message
    forward (f) history forward
    back (b)    history back
