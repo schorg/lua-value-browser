@@ -178,7 +178,7 @@ local function issimple (value)
 --      or t == "string"
       or t == "boolean" 
       or t == "number" 
-      or t == "thread" 
+--      or t == "thread" 
 --       or t == "userdata" 
 end
 
@@ -188,6 +188,10 @@ end
 
 local function istable (value)
    return type(value) == "table"
+end
+
+local function isthread (value)
+   return type(value) == "thread"
 end
 
 local function isuserdata (value)
@@ -232,7 +236,7 @@ local function string2repr(s)
    return string.format("\"%s\"", res)
 end
 
-local function ftu2repr(value)
+local function fttu2repr(value)
    return string.format("%s", tostring(value))
 end
 
@@ -246,25 +250,25 @@ local function key2name (key)
       end
    elseif t == "boolean" or t == "number" then
       return "["..simple2repr(key).."]"
-   else -- function, table, userdata
-      return "["..ftu2repr(key).."]"
+   else -- function, table, thread, userdata
+      return "["..fttu2repr(key).."]"
    end
 end
 
-local function complex2repr (value)
+local function complex2repr (value)  -- value always 
    local repr = {links = {}}   
    for k,v in pairs(value) do
       local elem = {}
       elem.name = key2name(k)
       elem.value = v
-      if istable(v) or isfunction(v) or isuserdata(v) then
+      if istable(v) or isfunction(v) or isuserdata(v) or isthread(v) then
          repr.links["."..elem.name] = elem
       end
       table.insert(repr, elem)
-      -- allow visualisaton of function, table or userdata key
-      if istable(k) or isfunction(k) or isuserdata(k) then
+      -- allow visualisaton of function, table, thread or userdata key
+      if istable(k) or isfunction(k) or isuserdata(k) or isthread(k) then
          local metaelem ={}
-         metaelem.name = string.format("<[%s]>", ftu2repr(k))
+         metaelem.name = string.format("<[%s]>", fttu2repr(k))
          metaelem.value = k
          repr.links["."..metaelem.name] = metaelem
          table.insert(repr, metaelem)
@@ -282,6 +286,13 @@ end
 
 local function table2repr(value)
    return complex2repr(value)
+end
+
+local function thread2repr(value)
+   local tt = {}
+   tt["<id>"] = simple2repr(value)
+   tt["<status>"] = coroutine.status(value)
+   return complex2repr(tt)
 end
 
 local function userdata2repr(value)
@@ -307,6 +318,7 @@ local function function2repr (value)
              end
    end 
    local ft = debug.getinfo(value, "nS")
+   ft["<id>"] = simple2repr(value)
    if is51 then
       ft["<fenv>"] = getfenv(value)
    end
@@ -329,12 +341,15 @@ function visit (value)
       repr = simple2repr(value)
    elseif isstring(value) then
       repr = string2repr(value)
-   else -- typ == "function"
+   elseif isthread(value) then
+      repr = thread2repr(value)
+   elseif isfunction(value) then
       repr = function2repr(value)
+   else
+      error("this should not happen")
    end
    return repr
 end
-
 
 ---------
 -- view
@@ -384,6 +399,10 @@ local function table2doc (repr)
    return complex2doc(repr)
 end
 
+local function thread2doc (repr)
+   return complex2doc(repr)
+end
+
 local function userdata2doc (repr)
    if type(repr) == "table" then
       return complex2doc(repr)
@@ -400,7 +419,9 @@ function view (name, type, repr)
       dr = userdata2doc(repr)
    elseif type == "function" then
       dr = function2doc(repr)
-   else -- simple type
+   elseif type == "thread" then
+      dr = thread2doc(repr)
+   else 
       dr = simple2doc(repr)
    end
 

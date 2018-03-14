@@ -11,7 +11,7 @@ Shows also meta values like
 * environments
 * upvalues
 * metatables
-* table keys which are tables, functions or userdata
+* table keys which are tables, functions, treads or userdata
 
 Usage:
 
