@@ -2,6 +2,7 @@ package = "lua-value-browser"
 version = "0.2-1"
 source = {
    url = "https://github.com/schorg/lua-value-browser"
+   tag = "v0.2"
 }
 description = {
    summary = "Interactively print and browse Lua values from the standalone interpreter.",
