@@ -1,7 +1,7 @@
 package = "lua-value-browser"
 version = "0.2-1"
 source = {
-   url = "https://github.com/schorg/lua-value-browser"
+   url = "https://github.com/schorg/lua-value-browser",
    tag = "v0.2"
 }
 description = {
