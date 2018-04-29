@@ -317,8 +317,9 @@ local function function2repr (value)
                 return debug.getupvalue(func, i)
              end
    end 
-   local ft = debug.getinfo(value, "nS")
-   ft["<id>"] = simple2repr(value)
+   --local ft = debug.getinfo(value, "nS")
+   local ft = debug.getinfo(value)
+   ft["func"] = simple2repr(value)
    if is51 then
       ft["<fenv>"] = getfenv(value)
    end
