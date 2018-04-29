@@ -13,7 +13,15 @@ Shows also meta values like
 * metatables
 * table keys which are tables, functions, treads or userdata
 
-Usage:
+## Installation
+
+Just copy the file `src/debug/browser.lua` to your local lua files or use [luarocks](https://luarocks.org)
+
+```
+luarocks install lua-value-browser
+```
+
+## Usage
 
 ```
 ...
